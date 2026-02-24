@@ -22,3 +22,39 @@ En entornos industriales es común tener logs con eventos por máquina en format
 ## 2) Formato de entrada esperado (TXT)
 
 Cada línea del log debe tener exactamente **3 segmentos** separados por `/`:
+
+
+
+### 2.1) Significado de cada campo
+
+- **nombre_maquina**: identificador de la máquina / línea (ej: `L1-ENVASADORA-01`)
+- **codigo_error**: código alfanumérico (ej: `E1357`, `A2786`, `I2360`)
+- **status_maquina**: estado operativo (ej: `RUN`, `STOP`, `FAULT`, `IDLE`, `MAINT`, `ESTOP`)
+
+---
+
+## 3) Salida (DataFrame) y esquema
+
+El script genera un DataFrame con estas columnas:
+
+| Columna          | Tipo (actual) | Descripción |
+|------------------|---------------|-------------|
+| `nombre_maquina` | `object`      | Nombre/ID de la máquina |
+| `codigo_error`   | `object`      | Código de error / evento |
+| `status_maquina` | `category`    | Estado de la máquina (convertido a categoría) |
+| `raw`            | `object`      | **Solo aparece** cuando una línea no cumple el formato |
+
+> Nota: La columna `raw` **solo se agrega** en filas inválidas, para facilitar depuración. :contentReference[oaicite:3]{index=3}
+
+---
+
+## 4) Comportamiento ante datos inválidos (muy importante)
+
+El script espera 3 partes por línea. Si una línea:
+
+- está vacía → se ignora
+- **no tiene exactamente 3 segmentos** al hacer `split("/")` → se registra como fila inválida:
+
+```python
+{"nombre_maquina": None, "codigo_error": None, "status_maquina": None, "raw": "<línea original>"}
+
